@@ -1,0 +1,187 @@
+{
+  "title": "Loan Approval Process with Risk Management",
+  "phases": [
+    {
+      "id": "phase_1",
+      "name": "Application",
+      "position": 250
+    },
+    {
+      "id": "phase_2",
+      "name": "Verification",
+      "position": 550
+    },
+    {
+      "id": "phase_3",
+      "name": "Approval",
+      "position": 850
+    },
+    {
+      "id": "phase_4",
+      "name": "Disbursement",
+      "position": 1150
+    }
+  ],
+  "lanes": [
+    {
+      "id": "lane_1",
+      "name": "Customer",
+      "color": "#64b5f6",
+      "height": 140,
+      "nodes": [
+        {
+          "id": "node_1758315292116",
+          "text": "step 1",
+          "type": "process",
+          "description": "this is step 1",
+          "position": {
+            "x": 142.48275640907215,
+            "y": 120
+          },
+          "risks": [
+            {
+              "id": "risk_1758335952024",
+              "text": "risk1",
+              "level": "medium",
+              "description": "risk 1 description",
+              "controls": [
+                {
+                  "id": "control_1758556833818",
+                  "text": "Control 1",
+                  "type": "preventive",
+                  "description": "control 1 description"
+                }
+              ]
+            }
+          ],
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "lane_2",
+      "name": "Front Office",
+      "color": "#4fc3f7",
+      "height": 140,
+      "nodes": [
+        {
+          "id": "node_1758315294046",
+          "text": "step2",
+          "type": "process",
+          "description": "this is step 2",
+          "position": {
+            "x": 417.37433634045425,
+            "y": 270
+          },
+          "risks": [
+            {
+              "id": "risk_1758315312233",
+              "text": "risk2",
+              "level": "medium",
+              "description": "",
+              "controls": [
+                {
+                  "id": "control_1758556822757",
+                  "text": "Control2",
+                  "type": "corrective",
+                  "description": ""
+                }
+              ]
+            },
+            {
+              "id": "risk_1758315314683",
+              "text": "risk3",
+              "level": "medium",
+              "description": "",
+              "controls": []
+            }
+          ],
+          "metadata": {}
+        },
+        {
+          "id": "node_1758556781258",
+          "text": "step 4",
+          "type": "process",
+          "description": "",
+          "position": {
+            "x": 1005.7705320445435,
+            "y": 270
+          },
+          "risks": [
+            {
+              "id": "risk_1758556807664",
+              "text": "Risk 4",
+              "level": "medium",
+              "description": "",
+              "controls": [
+                {
+                  "id": "control_1758556813929",
+                  "text": "Control 4",
+                  "type": "detective",
+                  "description": ""
+                }
+              ]
+            }
+          ],
+          "metadata": {}
+        }
+      ]
+    },
+    {
+      "id": "lane_3",
+      "name": "Credit Department",
+      "color": "#29b6f6",
+      "height": 140,
+      "nodes": [
+        {
+          "id": "node_1758315300881",
+          "text": "step3",
+          "type": "process",
+          "description": "this is step 3",
+          "position": {
+            "x": 731.1062775888689,
+            "y": 420
+          },
+          "risks": [],
+          "metadata": {}
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "node_1758315292116",
+      "to": "node_1758315294046",
+      "label": "test",
+      "risks": []
+    },
+    {
+      "from": "node_1758315294046",
+      "to": "node_1758315300881",
+      "label": "test2",
+      "risks": []
+    },
+    {
+      "from": "node_1758315300881",
+      "to": "node_1758556781258",
+      "label": "connection name",
+      "risks": [
+        {
+          "id": "risk_1758556900433",
+          "text": "risk5",
+          "level": "medium",
+          "description": "",
+          "controls": [
+            {
+              "id": "control_1758556902323",
+              "text": "control5",
+              "type": "preventive",
+              "description": ""
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "metadata": {}
+}

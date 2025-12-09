@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Import Controls</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Import Controls Fix</h1>
+
+    <div class="test-section">
+        <h2>1. Load Sample Data</h2>
+        <button onclick="loadSampleData()">Load sample-data.json</button>
+        <div id="loadStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Validate Data Structure</h2>
+        <button onclick="validateData()">Validate</button>
+        <div id="validateStatus"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Check Risk Controls</h2>
+        <button onclick="checkControls()">Check Controls</button>
+        <div id="controlsStatus"></div>
+    </div>
+
+    <script type="module">
+        import { ValidationService } from './src/core/services/ValidationService.js';
+        import { ProcessParser } from './src/core/utils/parser.js';
+
+        let sampleData = null;
+        let parsedData = null;
+
+        window.loadSampleData = async function() {
+            const statusDiv = document.getElementById('loadStatus');
+            try {
+                const response = await fetch('/sample-data.json');
+                sampleData = await response.json();
+                statusDiv.innerHTML = '<div class="status success">✓ Sample data loaded successfully</div>';
+                statusDiv.innerHTML += '<pre>' + JSON.stringify(sampleData, null, 2).substring(0, 500) + '...</pre>';
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">✗ Failed to load: ' + error.message + '</div>';
+            }
+        };
+
+        window.validateData = function() {
+            const statusDiv = document.getElementById('validateStatus');
+            if (!sampleData) {
+                statusDiv.innerHTML = '<div class="status warning">⚠ Please load sample data first</div>';
+                return;
+            }
+
+            try {
+                const parser = new ProcessParser();
+                parsedData = parser.parse(sampleData);
+
+                statusDiv.innerHTML = '<div class="status success">✓ Data validated and parsed successfully</div>';
+                statusDiv.innerHTML += '<h3>Structure Summary:</h3>';
+                statusDiv.innerHTML += '<ul>';
+                statusDiv.innerHTML += '<li>Lanes: ' + parsedData.lanes.length + '</li>';
+                statusDiv.innerHTML += '<li>Connections: ' + parsedData.connections.length + '</li>';
+                statusDiv.innerHTML += '<li>Phases: ' + parsedData.phases.length + '</li>';
+                statusDiv.innerHTML += '</ul>';
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="status error">✗ Validation failed: ' + error.message + '</div>';
+            }
+        };
+
+        window.checkControls = function() {
+            const statusDiv = document.getElementById('controlsStatus');
+            if (!parsedData) {
+                statusDiv.innerHTML = '<div class="status warning">⚠ Please validate data first</div>';
+                return;
+            }
+
+            let report = '';
+            let hasIssues = false;
+
+            // Check node risks
+            report += '<h3>Node Risks with Controls:</h3>';
+            parsedData.lanes.forEach(lane => {
+                lane.nodes.forEach(node => {
+                    if (node.risks && node.risks.length > 0) {
+                        node.risks.forEach(risk => {
+                            const hasControls = risk.controls && risk.controls.length > 0;
+                            const controlsCount = hasControls ? risk.controls.length : 0;
+
+                            report += `<div class="status ${hasControls ? 'success' : 'warning'}">`;
+                            report += `Node "${node.text}" - Risk "${risk.text}": `;
+                            if (hasControls) {
+                                report += `✓ ${controlsCount} control(s) preserved: `;
+                                report += risk.controls.map(c => c.text).join(', ');
+                            } else {
+                                report += `⚠ No controls`;
+                                if (!hasControls && sampleData.lanes.find(l => l.nodes.find(n => n.id === node.id))?.nodes.find(n => n.id === node.id)?.risks.find(r => r.id === risk.id)?.controls?.length > 0) {
+                                    report += ' (LOST DURING IMPORT!)';
+                                    hasIssues = true;
+                                }
+                            }
+                            report += '</div>';
+                        });
+                    }
+                });
+            });
+
+            // Check connection risks
+            report += '<h3>Connection Risks with Controls:</h3>';
+            parsedData.connections.forEach(conn => {
+                if (conn.risks && conn.risks.length > 0) {
+                    conn.risks.forEach(risk => {
+                        const hasControls = risk.controls && risk.controls.length > 0;
+                        const controlsCount = hasControls ? risk.controls.length : 0;
+
+                        report += `<div class="status ${hasControls ? 'success' : 'warning'}">`;
+                        report += `Connection "${conn.from}" → "${conn.to}" - Risk "${risk.text}": `;
+                        if (hasControls) {
+                            report += `✓ ${controlsCount} control(s) preserved: `;
+                            report += risk.controls.map(c => c.text).join(', ');
+                        } else {
+                            report += `⚠ No controls`;
+                        }
+                        report += '</div>';
+                    });
+                }
+            });
+
+            if (!hasIssues) {
+                report = '<div class="status success">✓ All controls preserved correctly!</div>' + report;
+            } else {
+                report = '<div class="status error">✗ Some controls were lost during import!</div>' + report;
+            }
+
+            statusDiv.innerHTML = report;
+        };
+    </script>
+</body>
+</html>

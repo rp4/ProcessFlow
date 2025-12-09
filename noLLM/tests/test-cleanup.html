@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Cleanup - Controls Import</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .pass { background: #d4edda; color: #155724; }
+        .fail { background: #f8d7da; color: #721c24; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Testing Cleanup - Embedded Controls Only</h1>
+
+    <div id="results"></div>
+
+    <script type="module">
+        import { ValidationService } from './src/core/services/ValidationService.js';
+        import { ProcessParser } from './src/core/utils/parser.js';
+
+        const results = document.getElementById('results');
+        let allPassed = true;
+
+        function addResult(testName, passed, details) {
+            const div = document.createElement('div');
+            div.className = `test ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <h3>${passed ? '✓' : '✗'} ${testName}</h3>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            results.appendChild(div);
+            if (!passed) allPassed = false;
+        }
+
+        // Test 1: Validate embedded controls structure
+        try {
+            const testData = {
+                title: "Test Process",
+                lanes: [{
+                    id: "lane1",
+                    name: "Test Lane",
+                    nodes: [{
+                        id: "node1",
+                        text: "Test Node",
+                        type: "process",
+                        position: { x: 100, y: 100 },
+                        risks: [{
+                            id: "risk1",
+                            text: "Test Risk",
+                            level: "medium",
+                            controls: [{
+                                id: "control1",
+                                text: "Test Control",
+                                type: "preventive"
+                            }]
+                        }]
+                    }]
+                }],
+                connections: [{
+                    from: "node1",
+                    to: "node2",
+                    label: "Test Connection",
+                    risks: [{
+                        id: "conn_risk1",
+                        text: "Connection Risk",
+                        level: "high",
+                        controls: [{
+                            id: "conn_control1",
+                            text: "Connection Control",
+                            type: "detective"
+                        }]
+                    }]
+                }]
+            };
+
+            const validated = ValidationService.validateProcessData(testData);
+            const nodeRisk = validated.lanes[0].nodes[0].risks[0];
+            const connRisk = validated.connections[0].risks[0];
+
+            const nodeControlsPresent = nodeRisk.controls && nodeRisk.controls.length === 1;
+            const connControlsPresent = connRisk.controls && connRisk.controls.length === 1;
+            const noControlIds = !nodeRisk.controlIds && !connRisk.controlIds;
+
+            addResult(
+                'Embedded Controls Validation',
+                nodeControlsPresent && connControlsPresent && noControlIds,
+                `Node controls: ${nodeControlsPresent ? 'Present' : 'Missing'}
+Connection controls: ${connControlsPresent ? 'Present' : 'Missing'}
+No controlIds: ${noControlIds ? 'Confirmed' : 'FAILED - controlIds still present!'}`
+            );
+        } catch (error) {
+            addResult('Embedded Controls Validation', false, error.message);
+        }
+
+        // Test 2: Parser handles embedded structure
+        try {
+            const parser = new ProcessParser();
+            const sampleData = parser.generateSampleProcess();
+
+            // Check that sample data uses embedded structure
+            let hasEmbeddedControls = false;
+            let hasLegacyControlIds = false;
+            let hasLegacyControls = false;
+
+            sampleData.lanes.forEach(lane => {
+                lane.nodes.forEach(node => {
+                    if (node.controls) hasLegacyControls = true;
+                    if (node.risks) {
+                        node.risks.forEach(risk => {
+                            if (risk.controlIds) hasLegacyControlIds = true;
+                            if (risk.controls && risk.controls.length > 0) hasEmbeddedControls = true;
+                        });
+                    }
+                });
+            });
+
+            addResult(
+                'Sample Data Structure',
+                hasEmbeddedControls && !hasLegacyControlIds && !hasLegacyControls,
+                `Embedded controls: ${hasEmbeddedControls ? 'Yes' : 'No'}
+Legacy controlIds: ${hasLegacyControlIds ? 'FOUND - Should be removed!' : 'None'}
+Legacy controls array: ${hasLegacyControls ? 'FOUND - Should be removed!' : 'None'}`
+            );
+        } catch (error) {
+            addResult('Sample Data Structure', false, error.message);
+        }
+
+        // Test 3: Load and validate sample-data.json
+        fetch('/sample-data.json')
+            .then(response => response.json())
+            .then(sampleData => {
+                const parser = new ProcessParser();
+                const parsed = parser.parse(sampleData);
+
+                let controlsPreserved = true;
+                let details = [];
+
+                parsed.lanes.forEach(lane => {
+                    lane.nodes.forEach(node => {
+                        if (node.risks) {
+                            node.risks.forEach(risk => {
+                                const originalRisk = sampleData.lanes
+                                    .find(l => l.id === lane.id)?.nodes
+                                    .find(n => n.id === node.id)?.risks
+                                    .find(r => r.id === risk.id);
+
+                                if (originalRisk && originalRisk.controls) {
+                                    if (!risk.controls || risk.controls.length !== originalRisk.controls.length) {
+                                        controlsPreserved = false;
+                                        details.push(`Risk "${risk.text}": Expected ${originalRisk.controls.length} controls, got ${risk.controls?.length || 0}`);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                });
+
+                parsed.connections.forEach(conn => {
+                    if (conn.risks) {
+                        conn.risks.forEach(risk => {
+                            const originalConn = sampleData.connections
+                                .find(c => c.from === conn.from && c.to === conn.to);
+                            const originalRisk = originalConn?.risks?.find(r => r.id === risk.id);
+
+                            if (originalRisk && originalRisk.controls) {
+                                if (!risk.controls || risk.controls.length !== originalRisk.controls.length) {
+                                    controlsPreserved = false;
+                                    details.push(`Connection risk "${risk.text}": Expected ${originalRisk.controls.length} controls, got ${risk.controls?.length || 0}`);
+                                }
+                            }
+                        });
+                    }
+                });
+
+                addResult(
+                    'Import sample-data.json',
+                    controlsPreserved,
+                    controlsPreserved ? 'All controls preserved correctly!' : details.join('\n')
+                );
+
+                // Summary
+                const summaryDiv = document.createElement('div');
+                summaryDiv.className = `test ${allPassed ? 'pass' : 'fail'}`;
+                summaryDiv.innerHTML = `<h2>${allPassed ? '✓ All Tests Passed!' : '✗ Some Tests Failed'}</h2>`;
+                results.appendChild(summaryDiv);
+            })
+            .catch(error => {
+                addResult('Import sample-data.json', false, error.message);
+            });
+    </script>
+</body>
+</html>

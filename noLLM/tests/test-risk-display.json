@@ -1,0 +1,53 @@
+{
+  "title": "Test Risk Display",
+  "lanes": [
+    {
+      "id": "lane1",
+      "name": "Test Lane",
+      "color": "#64b5f6",
+      "nodes": [
+        {
+          "id": "node1",
+          "text": "Node with Risks",
+          "type": "process",
+          "position": { "x": 300, "y": 100 },
+          "risks": [
+            {
+              "id": "risk1",
+              "text": "High Risk",
+              "level": "high",
+              "description": "This is a high-level risk",
+              "controls": []
+            },
+            {
+              "id": "risk2",
+              "text": "Medium Risk",
+              "level": "medium",
+              "description": "This is a medium-level risk",
+              "controls": [
+                {
+                  "id": "control1",
+                  "text": "Control Measure",
+                  "description": "This control mitigates the risk"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "node2",
+          "text": "Node without Risks",
+          "type": "process",
+          "position": { "x": 500, "y": 100 }
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "node1",
+      "to": "node2",
+      "label": "Flow"
+    }
+  ]
+}

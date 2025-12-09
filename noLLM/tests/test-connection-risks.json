@@ -1,0 +1,91 @@
+{
+  "title": "Test Connection Risks",
+  "lanes": [
+    {
+      "id": "lane1",
+      "name": "Lane 1",
+      "color": "#64b5f6",
+      "nodes": [
+        {
+          "id": "node1",
+          "text": "Start Node",
+          "type": "start",
+          "position": { "x": 200, "y": 100 }
+        },
+        {
+          "id": "node2",
+          "text": "Process Node",
+          "type": "process",
+          "position": { "x": 400, "y": 100 }
+        }
+      ]
+    },
+    {
+      "id": "lane2",
+      "name": "Lane 2",
+      "color": "#4fc3f7",
+      "nodes": [
+        {
+          "id": "node3",
+          "text": "Decision Node",
+          "type": "decision",
+          "position": { "x": 600, "y": 100 }
+        },
+        {
+          "id": "node4",
+          "text": "End Node",
+          "type": "end",
+          "position": { "x": 800, "y": 100 }
+        }
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "from": "node1",
+      "to": "node2",
+      "label": "Flow 1",
+      "risks": [
+        {
+          "id": "conn_risk1",
+          "text": "Data Loss",
+          "level": "high",
+          "description": "Risk of data loss during transfer",
+          "controls": []
+        },
+        {
+          "id": "conn_risk2",
+          "text": "Timeout",
+          "level": "medium",
+          "description": "Connection may timeout",
+          "controls": [
+            {
+              "id": "conn_control1",
+              "text": "Retry Logic",
+              "description": "Automatic retry on failure"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "from": "node2",
+      "to": "node3",
+      "label": "Flow 2",
+      "risks": [
+        {
+          "id": "conn_risk3",
+          "text": "Bottleneck",
+          "level": "low",
+          "description": "Potential performance bottleneck",
+          "controls": []
+        }
+      ]
+    },
+    {
+      "from": "node3",
+      "to": "node4",
+      "label": "Complete"
+    }
+  ]
+}

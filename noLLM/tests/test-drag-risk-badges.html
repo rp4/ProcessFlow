@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Risk Badge Drag and Drop</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            color: #333;
+        }
+        .instructions {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .instructions h2 {
+            margin-top: 0;
+        }
+        .instructions ol {
+            margin-bottom: 0;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Risk Badge Drag and Drop Test</h1>
+
+    <div class="instructions">
+        <h2>Test Instructions:</h2>
+        <ol>
+            <li>Open the SwimLanes application in your browser</li>
+            <li>Load the test file: <strong>test-risk-display.json</strong></li>
+            <li>You should see "Node with Risks" with risk badges above it</li>
+            <li>Drag the node with risks to different positions</li>
+            <li>Verify that:
+                <ul>
+                    <li>Risk badges stay attached to the node</li>
+                    <li>Badges remain positioned above the node</li>
+                    <li>No duplicate badges appear</li>
+                    <li>Badges move smoothly with the node</li>
+                </ul>
+            </li>
+            <li>Try dragging the node to a different lane</li>
+            <li>Verify badges still align correctly after lane change</li>
+        </ol>
+    </div>
+
+    <div class="status">
+        <h3>Expected Behavior:</h3>
+        <ul>
+            <li>✅ Risk badges should remain centered above the node</li>
+            <li>✅ Badges should move as a unit with the node</li>
+            <li>✅ No visual glitches or position shifts</li>
+            <li>✅ Badges maintain correct spacing</li>
+            <li>✅ Click handlers on badges still work after drag</li>
+        </ul>
+    </div>
+
+    <div class="status" style="background: #fff3cd; border-color: #ffc107; margin-top: 10px;">
+        <h3>What was fixed:</h3>
+        <ul>
+            <li>Risk badges now use relative positioning (0,0) within the node group</li>
+            <li>Badges are properly transformed with their parent node</li>
+            <li>Differential rendering preserves badge positions during drag</li>
+            <li>Removed absolute positioning that caused misalignment</li>
+        </ul>
+    </div>
+</body>
+</html>
